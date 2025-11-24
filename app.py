@@ -1,14 +1,15 @@
 from flask import Flask, render_template, request
+from cs50 import SQL
 
 app = Flask(__name__)
 
+db = SQL("sqlite:///froshims.db")
+
 SPORTS = [
-    "Basketball",
+    "Basketball", 
     "Soccer",
     "Ultimate Frisbee",
 ]
-
-REGISTRANTS = {}
 
 @app.route("/")
 def index():
@@ -22,10 +23,12 @@ def register():
         return render_template("failure.html")
     
     sport = request.form.get("sport")
-    REGISTRANTS[name] = sport
+    
+    db.execute("INSERT INTO registrants (name, sport) VALUES(?, ?)", name, sport)
     
     return render_template("success.html")
 
 @app.route("/registrants")
 def registrants():
-    return render_template("registrants.html", registrants=REGISTRANTS)
+    registrants = db.execute("SELECT name,sport FROM registrants")
+    return render_template("registrants.html", registrants=registrants);
