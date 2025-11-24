@@ -1,34 +1,24 @@
-from flask import Flask, render_template, request
-from cs50 import SQL
+from flask import Flask, render_template,redirect,request,session
+from flask_session import Session
 
 app = Flask(__name__)
 
-db = SQL("sqlite:///froshims.db")
-
-SPORTS = [
-    "Basketball", 
-    "Soccer",
-    "Ultimate Frisbee",
-]
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
 
 @app.route("/")
 def index():
-    return render_template("index.html",sports=SPORTS)
+    return render_template("index.html",name=session.get("name"))
 
-@app.route("/register",methods=["POST"])
-def register():
-    
-    name = request.form.get("name")
-    if not request.form.get("name") or request.form.get("sport") not in SPORTS:
-        return render_template("failure.html")
-    
-    sport = request.form.get("sport")
-    
-    db.execute("INSERT INTO registrants (name, sport) VALUES(?, ?)", name, sport)
-    
-    return render_template("success.html")
+@app.route("/login",methods=["GET","POST"])
+def login():
+    if request.method == "POST":
+        session["name"] = request.form.get("name")
+        return redirect("/")
+    return render_template("login.html")
 
-@app.route("/registrants")
-def registrants():
-    registrants = db.execute("SELECT name,sport FROM registrants")
-    return render_template("registrants.html", registrants=registrants);
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
